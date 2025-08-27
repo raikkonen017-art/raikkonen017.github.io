@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>訂正作業小幫手</title>
+  <style>
+    :root {
+      --bg:#0b1020;--panel:#11182d;--muted:#7c8aa5;
+      --text:#eaf1ff;--accent:#4da3ff;--accent-2:#a8ff78;
+      --danger:#ff6b6b;--ok:#2ecc71;--border:#22304d;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:system-ui,"Noto Sans TC",sans-serif;
+      background:linear-gradient(180deg,#091225,#060b17 60%);
+      color:var(--text)
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    header{position:sticky;top:0;z-index:5;
+      background:rgba(6,11,23,.7);backdrop-filter:blur(6px);
+      border-bottom:1px solid var(--border)}
+    header .bar{display:flex;gap:12px;align-items:center;
+      justify-content:space-between;padding:12px 20px}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:700}
+    .logo .dot{width:10px;height:10px;border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+    .nav{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{border:1px solid var(--border);background:#0e1530;color:var(--text);
+      padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+    .btn:hover{border-color:#2e3f63}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),#6bd3ff);
+      color:#00122a;border:none}
+    .btn.ghost{background:transparent}
+    .btn.danger{background:transparent;border-color:#4a2233;color:#ff9db0}
+    .btn.small{padding:6px 10px;border-radius:10px;font-size:14px}
+    .grid{display:grid;gap:14px}
+    .cards{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+    .card{background:linear-gradient(180deg,#0f1730,#0b1126);
+      border:1px solid var(--border);border-radius:16px;padding:16px}
+    .card h3{margin:0 0 8px}
+    .muted{color:var(--muted)}
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .spacer{flex:1}
+    .panel{background:var(--panel);border:1px solid var(--border);
+      border-radius:14px;padding:16px}
+    .title{display:flex;align-items:center;gap:10px;margin:20px 0 12px}
+    .title h2{margin:0}
+    .num-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));
+      gap:8px;margin-top:14px}
+    .num{display:flex;align-items:center;justify-content:center;
+      padding:10px 0;border:1px solid var(--border);border-radius:12px;
+      background:#0b1530;cursor:pointer;user-select:none;font-weight:700}
+    .num[data-need="1"]{background:linear-gradient(180deg,#2c1330,#1c0e21);
+      border-color:#5d2644;color:#ffc7d1}
+    .stat .pill{padding:6px 10px;border:1px solid var(--border);
+      border-radius:999px}
+    .section{display:none}
+    .section.active{display:block}
+    .footer{margin:30px 0;color:#86a0c9;font-size:14px;text-align:center}
+    .hint{font-size:13px;color:#9bb0d8}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar wrap">
+      <div class="logo"><span class="dot"></span>訂正作業小幫手</div>
+      <nav class="nav">
+        <button class="btn small ghost" data-goto="overview">作業總覽</button>
+        <button class="btn small ghost" data-goto="agg">總訂正名單</button>
+        <button class="btn small primary" data-goto="new">新增作業</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- 總覽 -->
+    <section id="overview" class="section active">
+      <div class="title"><h2>作業總覽</h2></div>
+      <div id="overviewEmpty" class="panel" style="display:none">
+        目前沒有作業，請點擊「新增作業」。
+      </div>
+      <div id="overviewList" class="grid cards"></div>
+    </section>
+
+    <!-- 詳情 -->
+    <section id="detail" class="section">
+      <div class="row title">
+        <button class="btn small ghost" id="backBtn">返回總覽</button>
+        <h2 id="detailTitle">作業名稱</h2>
+        <div class="spacer"></div>
+        <button class="btn small danger" id="delBtn">刪除此作業</button>
+      </div>
+      <div class="panel">
+        <div class="row" style="gap:10px;flex-wrap:wrap">
+          <div class="stat">
+            <span class="pill" id="statTotal">班級人數：0</span>
+            <span class="pill" id="statNeed">需訂正：0</span>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn small" id="btnSelectAll">全部標記為需訂正</button>
+          <button class="btn small" id="btnClearAll">全部清除</button>
+          <button class="btn small" id="btnExportOne">匯出此作業清單</button>
+        </div>
+        <div id="numGrid" class="num-grid"></div>
+        <p class="hint">點擊座號即可標記／取消「需訂正」。</p>
+      </div>
+    </section>
+
+    <!-- 總訂正名單 -->
+    <section id="agg" class="section">
+      <div class="title">
+        <button class="btn small ghost" data-goto="overview">返回總覽</button>
+        <h2>總訂正名單</h2>
+      </div>
+      <div class="panel">
+        <div id="aggContent"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer wrap">
+    <p>© 2025 訂正作業小幫手</p>
+  </footer>
+
+  <script>
+    let assignments = [];
+    let currentIndex = -1;
+
+    // DOM
+    const overview = document.getElementById("overview");
+    const detail = document.getElementById("detail");
+    const aggSection = document.getElementById("agg");
+    const overviewList = document.getElementById("overviewList");
+    const overviewEmpty = document.getElementById("overviewEmpty");
+    const detailTitle = document.getElementById("detailTitle");
+    const numGrid = document.getElementById("numGrid");
+    const statTotal = document.getElementById("statTotal");
+    const statNeed = document.getElementById("statNeed");
+    const backBtn = document.getElementById("backBtn");
+    const delBtn = document.getElementById("delBtn");
+    const btnSelectAll = document.getElementById("btnSelectAll");
+    const btnClearAll = document.getElementById("btnClearAll");
+    const btnExportOne = document.getElementById("btnExportOne");
+    const aggContent = document.getElementById("aggContent");
+
+    // LocalStorage
+    function saveData() {
+      localStorage.setItem("assignments", JSON.stringify(assignments));
+    }
+    function loadData() {
+      let data = localStorage.getItem("assignments");
+      if (data) assignments = JSON.parse(data);
+    }
+    loadData();
+
+    // 導航
+    document.querySelectorAll("[data-goto]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        let target = btn.dataset.goto;
+        if (target === "overview") showOverview();
+        else if (target === "new") createNewAssignment();
+        else if (target === "agg") showAggregate();
+      });
+    });
+    backBtn.addEventListener("click", showOverview);
+    delBtn.addEventListener("click", () => {
+      if (currentIndex >= 0) {
+        assignments.splice(currentIndex, 1);
+        saveData();
+        showOverview();
+      }
+    });
+
+    // 建立作業
+    function createNewAssignment() {
+      let name = prompt("請輸入作業名稱：", "數學第1次小考");
+      if (!name) return;
+      let total = parseInt(prompt("請輸入班級總人數：", "30"));
+      if (isNaN(total) || total <= 0) return;
+      let data = { name, total, need: Array(total).fill(false) };
+      assignments.push(data);
+      saveData();
+      showOverview();
+    }
+
+    // 總覽
+    function showOverview() {
+      overview.classList.add("active");
+      detail.classList.remove("active");
+      aggSection.classList.remove("active");
+      overviewList.innerHTML = "";
+      if (assignments.length === 0) {
+        overviewEmpty.style.display = "block";
+        return;
+      }
+      overviewEmpty.style.display = "none";
+      assignments.forEach((a, idx) => {
+        let card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h3>${a.name}</h3>
+          <p class="muted">班級人數：${a.total}</p>
+          <p>需訂正：${a.need.filter(x=>x).length}</p>
+          <button class="btn small primary">查看</button>`;
+        card.querySelector("button").addEventListener("click", () => showDetail(idx));
+        overviewList.appendChild(card);
+      });
+    }
+    showOverview();
+
+    // 詳情
+    function showDetail(idx) {
+      currentIndex = idx;
+      let a = assignments[idx];
+      detailTitle.textContent = a.name;
+      statTotal.textContent = "班級人數：" + a.total;
+      statNeed.textContent = "需訂正：" + a.need.filter(x=>x).length;
+      numGrid.innerHTML = "";
+      for (let i=0;i<a.total;i++) {
+        let div = document.createElement("div");
+        div.className = "num";
+        div.textContent = i+1;
+        div.dataset.need = a.need[i] ? "1":"0";
+        div.addEventListener("click", () => {
+          a.need[i] = !a.need[i];
+          div.dataset.need = a.need[i] ? "1":"0";
+          statNeed.textContent = "需訂正：" + a.need.filter(x=>x).length;
+          saveData();
+        });
+        numGrid.appendChild(div);
+      }
+      overview.classList.remove("active");
+      detail.classList.add("active");
+      aggSection.classList.remove("active");
+    }
+
+    // 總訂正名單
+    function showAggregate() {
+      overview.classList.remove("active");
+      detail.classList.remove("active");
+      aggSection.classList.add("active");
+      aggContent.innerHTML = "";
+      if (assignments.length === 0) {
+        aggContent.innerHTML = "<p>目前沒有任何作業。</p>";
+        return;
+      }
+      assignments.forEach(a => {
+        let list = a.need.map((v,i)=> v? (i+1):null).filter(x=>x);
+        let block = document.createElement("div");
+        block.style.marginBottom = "16px";
+        block.innerHTML = `
+          <h3>${a.name}</h3>
+          <p>需訂正：${list.length ? list.join(", ") : "無"}</p>`;
+        aggContent.appendChild(block);
+      });
+    }
+
+    // 全部訂正/清除
+    btnSelectAll.addEventListener("click", () => {
+      let a = assignments[currentIndex];
+      a.need = a.need.map(()=>true);
+      saveData();
+      showDetail(currentIndex);
+    });
+    btnClearAll.addEventListener("click", () => {
+      let a = assignments[currentIndex];
+      a.need = a.need.map(()=>false);
+      saveData();
+      showDetail(currentIndex);
+    });
+
+    // 匯出
+    btnExportOne.addEventListener("click", () => {
+      let a = assignments[currentIndex];
+      let list = a.need.map((v,i)=> v? (i+1):null).filter(x=>x);
+      let text = `${a.name} 需訂正名單\\n` + (list.length? list.join(", "): "無");
+      alert(text);
+    });
+  </script>
+</body>
+</html>
